@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Sliders, MapPin, Sparkles, Cpu, ChevronDown } from 'lucide-react';
+import { Volume2, VolumeX, Sliders, MapPin, Sparkles, ChevronDown, Menu, X, Compass, LayoutDashboard, Cpu, Activity } from 'lucide-react';
 import { cosmicAudio } from './CosmicAudio';
 import { GalaxyConfig } from '../galaxy/ProceduralGalaxy';
 
@@ -10,6 +10,8 @@ interface NavbarProps {
   showControls: boolean;
   onToggleHotspots: () => void;
   showHotspots: boolean;
+  currentRoute: string;
+  onNavigate: (route: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,9 +21,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   showControls,
   onToggleHotspots,
   showHotspots,
+  currentRoute,
+  onNavigate,
 }) => {
   const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [presetOpen, setPresetOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleAudioToggle = () => {
     const playing = cosmicAudio.toggle();
@@ -41,49 +46,67 @@ export const Navbar: React.FC<NavbarProps> = ({
     setPresetOpen(false);
   };
 
+  const navItems = [
+    { id: 'hero', label: 'Galaxy Landing', icon: Compass },
+    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+    { id: 'architecture', label: 'Architecture', icon: Cpu },
+    { id: 'telemetry', label: 'Telemetry', icon: Activity },
+  ];
+
+  const handleNavClick = (routeId: string) => {
+    onNavigate(routeId);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 md:px-8 py-4 transition-all duration-300 pointer-events-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between pointer-events-auto">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl glass-panel border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+        {/* Logo - Clickable to navigate to Hero/Home */}
+        <button
+          onClick={() => handleNavClick('hero')}
+          className="flex items-center gap-3 group text-left focus:outline-none"
+          title="ASTRA Engine Home"
+        >
+          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl glass-panel border border-cyan-500/30 text-cyan-400 group-hover:border-cyan-400 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-wider text-white">ASTRA</span>
+              <span className="font-extrabold text-lg tracking-wider text-white group-hover:text-cyan-300 transition-colors">
+                ASTRA
+              </span>
               <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-widest text-cyan-400 bg-cyan-950/80 border border-cyan-500/30 rounded uppercase">
                 v2.4 GPU
               </span>
             </div>
             <p className="text-[10px] font-mono text-slate-400 tracking-tight">PROCEDURAL GALACTIC ENGINE</p>
           </div>
-        </div>
+        </button>
 
-        {/* Navigation Links - Hidden on Mobile */}
-        <nav className="hidden md:flex items-center gap-1 p-1.5 glass-panel rounded-full border border-white/10">
-          <a
-            href="#hero"
-            className="px-4 py-1.5 text-xs font-medium text-slate-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
-          >
-            Overview
-          </a>
-          <a
-            href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-slate-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
-          >
-            Architecture
-          </a>
-          <a
-            href="#telemetry"
-            className="px-4 py-1.5 text-xs font-medium text-slate-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
-          >
-            Telemetry
-          </a>
+        {/* Navigation Links - Desktop */}
+        <nav className="hidden md:flex items-center gap-1 p-1.5 glass-panel rounded-full border border-white/10 shadow-lg">
+          {navItems.map((item) => {
+            const IconComp = item.icon;
+            const isActive = currentRoute === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                  isActive
+                    ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <IconComp className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* Header Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {/* Preset Selector Dropdown */}
           <div className="relative">
             <button
@@ -159,8 +182,43 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {isPlayingSound ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
+
+          {/* Mobile Navigation Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden flex items-center justify-center w-9 h-9 glass-button rounded-xl text-slate-300"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown Panel */}
+      {mobileMenuOpen && (
+        <div className="md:hidden max-w-7xl mx-auto mt-2 pointer-events-auto p-3 glass-panel rounded-2xl border border-slate-700/60 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-2 gap-2">
+            {navItems.map((item) => {
+              const IconComp = item.icon;
+              const isActive = currentRoute === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-medium transition-all ${
+                    isActive
+                      ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/40 font-semibold'
+                      : 'text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <IconComp className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
